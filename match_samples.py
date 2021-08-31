@@ -68,7 +68,7 @@ def main() -> None:
 
         samples[ infile ] = {}
 
-        for rec in vcf_in.fetch('chr22'):
+        for rec in vcf_in.fetch('3R'):
             if len( rec.alts ) > 1:
                 continue
 
@@ -86,7 +86,7 @@ def main() -> None:
     sample_names = list(samples.keys())
     for i in range(0, len(sample_names)-1):
         for j in range(i+1, len(sample_names)):
-            shared_vars = comp_vars( samples[sample_names[ i ]], samples[sample_names[ j ]])
+            shared_vars = comp_vars( samples[sample_names[ i ]].copy(), samples[sample_names[ j ]].copy())
             print( f"{sample_names[ i ]}\t{sample_names[ j ]}\t{shared_vars}")
 
 
