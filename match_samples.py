@@ -9,6 +9,7 @@ import time
 import json
 import tempfile
 import getpass
+import copy
 import pprint as pp
 
 from pysam import VariantFile
@@ -32,7 +33,7 @@ def comp_vars( sample1:dict, sample2:dict) -> dict:
             else:
                 shared += 1
                 del sample2[chrom][pos]
-            
+
 
     for chrom in list(sample2.keys()):
         total_vars += 1
@@ -51,7 +52,7 @@ def comp_vars( sample1:dict, sample2:dict) -> dict:
         return 0.0
 
     return shared/total_vars*1.0
-    
+
 
 
 def main() -> None:
@@ -78,7 +79,7 @@ def main() -> None:
             alt   = rec.alts[0]
             if chrom not in samples[ infile ]:
                 samples[ infile ][ chrom ] = {}
-            
+
             samples[ infile ][ chrom ][ pos ] = (ref, alt)
 
 #            print( rec.chrom, rec.pos, rec.ref, alt )
@@ -86,7 +87,7 @@ def main() -> None:
     sample_names = list(samples.keys())
     for i in range(0, len(sample_names)-1):
         for j in range(i+1, len(sample_names)):
-            shared_vars = comp_vars( samples[sample_names[ i ]].copy(), samples[sample_names[ j ]].copy())
+            shared_vars = comp_vars( copy.deepcopy(samples[sample_names[ i ]]), copy.deepcopy(samples[sample_names[ j ]]))
             print( f"{sample_names[ i ]}\t{sample_names[ j ]}\t{shared_vars}")
 
 
