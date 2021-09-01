@@ -46,7 +46,7 @@ def comp_vars( sample1:dict, sample2:dict) -> dict:
                 shared += 1
 
 
-#    print(total_vars, shared, different, missing)
+#    print(f"total: {total_vars}, shared: {shared}, differenct: {different}, missing: {missing}")
 
     if total_vars == 0:
         return 0.0
@@ -57,17 +57,32 @@ def comp_vars( sample1:dict, sample2:dict) -> dict:
 
 def main() -> None:
 
-    samples = {}
+    infile = sys.argv[1]
+    vcf_in = VariantFile(infile)  # auto-detect input format
 
 
-    for infile in sys.argv[1:]:
+    ref_sample = {}
+    for rec in vcf_in.fetch('chr22'):
+        if len( rec.alts ) > 1:
+            continue
+
+        chrom = rec.chrom
+        pos   = rec.pos
+        ref   = rec.ref
+        alt   = rec.alts[0]
+        if chrom not in ref_sample:
+            ref_sample[ chrom ] = {}
+
+        ref_sample[ chrom ][ pos ] = (ref, alt)
+
+
+    for infile in sys.argv[2:]:
 
         vcf_in = VariantFile(infile)  # auto-detect input format
         infile = re.sub(r'.*/', '', infile)
         infile = re.sub(r'\..*', '', infile)
 #        print( infile )
-
-        samples[ infile ] = {}
+        sample = {}
 
         for rec in vcf_in.fetch('chr22'):
             if len( rec.alts ) > 1:
@@ -77,18 +92,15 @@ def main() -> None:
             pos   = rec.pos
             ref   = rec.ref
             alt   = rec.alts[0]
-            if chrom not in samples[ infile ]:
-                samples[ infile ][ chrom ] = {}
+            if chrom not in sample:
+                sample[ chrom ] = {}
 
-            samples[ infile ][ chrom ][ pos ] = (ref, alt)
+            sample[ chrom ][ pos ] = (ref, alt)
 
 #            print( rec.chrom, rec.pos, rec.ref, alt )
 
-    sample_names = list(samples.keys())
-    for i in range(0, len(sample_names)-1):
-        for j in range(i+1, len(sample_names)):
-            shared_vars = comp_vars( copy.deepcopy(samples[sample_names[ i ]]), copy.deepcopy(samples[sample_names[ j ]]))
-            print( f"{sample_names[ i ]}\t{sample_names[ j ]}\t{shared_vars}")
+        shared_vars = comp_vars( copy.deepcopy( ref_sample ), sample)
+        print( f"{infile}\t{shared_vars}")
 
 
 
