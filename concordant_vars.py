@@ -33,15 +33,16 @@ def main() -> None:
 
     args.infile = args.infile[0]
 
-    total_vars = 0
-    low_depth  = 0
+    total_vars  = 0
+    low_depth   = 0
     low_quality = 0
-    concordant = 0
-    discordant = 0
-    rep_region = 0
-    no_call    = 0
-    low_gq     = 0
-    odd_homozygosity = 0
+    concordant  = 0
+    discordant  = 0
+    rep_region  = 0
+    no_call     = 0
+    low_gq      = 0
+    new_allele  = 0
+    lost_allele = 0
 
 
     tbx = None
@@ -49,7 +50,9 @@ def main() -> None:
         tbx = TabixFile(args.reps_file)
 
     vcf_in = VariantFile(args.infile)  # auto-detect input format
+#    print( vcf_in.header, end='' )
     for rec in vcf_in.fetch(args.chrom):
+#        print( rec, end='' )
 
         if  len( rec.alts ) > 1 and args.multi_vars == False:
             continue
@@ -98,8 +101,12 @@ def main() -> None:
         elif None in rec.samples[0]['GT'] + rec.samples[1]['GT']:
             no_call += 1
         elif rec.samples[0]['GT'] == (1,1) and  rec.samples[1]['GT'] == (0,1):
-            print( f"{rec.chrom}:{rec.pos}\t{rec.samples[0]['GT']} != {rec.samples[1]['GT']}" )
-            odd_homozygosity +=1
+            print( f"LOST\t{rec.chrom}:{rec.pos}\t{rec.qual}\t{rec.samples[0]['GT']} != {rec.samples[1]['GT']}" )
+            lost_allele +=1
+            discordant += 1
+        elif rec.samples[0]['GT'] == (0,0):
+            print( f"GAIN\t{rec.chrom}:{rec.pos}\t{rec.qual}\t{rec.samples[0]['GT']} != {rec.samples[1]['GT']}" )
+            new_allele +=1
             discordant += 1
 
         else:
@@ -107,7 +114,7 @@ def main() -> None:
 
 
     print(f"total: {total_vars}, concordant: {concordant}, discordant: {discordant}")
-    print(f"Filtered out: low-depth: {low_depth}, no_call: {no_call}, rep_regions: {rep_region}, low_gq: {low_gq}, low quality: {low_quality}, odd_homozygosity: {odd_homozygosity}")
+    print(f"Filtered out: low-depth: {low_depth}, no_call: {no_call}, rep_regions: {rep_region}, low_gq: {low_gq}, low quality: {low_quality}, lost_allele: {lost_allele}, new_allele: {new_allele}")
     print(f"corcondance: {(concordant*100)/(discordant+concordant)} %")
 
 
